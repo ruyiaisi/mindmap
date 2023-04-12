@@ -1,61 +1,310 @@
-
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>思维导图</title>
+    <meta charset="UTF-8" />
+    <title>MindMap</title>
     <style>
-        /* 设置网页的样式 */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
+        /* 设置画布的样式 */
         #container {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #mindmap {
-            width: 80%;
-            height: 80%;
+            width: 800px;
+            height: 600px;
             border: 1px solid black;
+            position: relative;
         }
 
-        .node {
-            fill: white;
-            stroke: black;
-            cursor: pointer;
-        }
-
-        .node:hover {
-            fill: lightgray;
-        }
-
-        .node-text {
-            font-size: 12px;
-            text-anchor: middle;
-            dominant-baseline: central;
-        }
-
-        .link {
-            fill: none;
-            stroke: gray;
+        /* 设置SVG元素的样式 */
+        svg {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
     </style>
 </head>
+
 <body>
-    <div id="container">
-        <!-- 创建一个svg元素，用于显示思维导图 -->
-        <svg id="mindmap"></svg>
-    </div>
-    <!-- 引入d3.js库 -->
-    <script src="https://d3js.org/d3.v4.min.js"></script>
-    <!-- 引入自定义的js文件 -->
-    <script src="mindmap.js"></script>
+    <!-- 创建一个画布元素 -->
+    <div id="container"></div>
+    <!-- 引入修改后的mian.js文件 -->
+    <script>
+        // 使用ES6的语法
+        class MindMap {
+            constructor(options) {
+                this.container = options.container;
+                this.root = options.root;
+                this.style = options.style;
+                this.nodes = [];
+                this.lines = [];
+                this.draggingNode = null;
+                this.startX = 0;
+                this.startY = 0;
+                this.init();
+            }
+
+            createNode(text, parent) {
+                // 使用更有意义的变量名
+                let nodeElement = document.createElement("div");
+                nodeElement.innerText = text;
+                nodeElement.setAttribute("draggable", "true");
+                // 检查并调整节点的样式设置，确保节点有合适的宽度、高度、背景颜色、文本颜色、文本字体大小等属性，使节点可见
+                nodeElement.style.width = `${this.style.node.width} px`;
+                nodeElement.style.height = `${this.style.node.height} px`;
+                nodeElement.style.borderRadius = `${this.style.node.borderRadius} px`;
+                nodeElement.style.backgroundColor = this.style.node.backgroundColor;
+                nodeElement.style.color = this.style.node.color;
+                nodeElement.style.fontSize = `${this.style.node.fontSize} px`;
+                nodeElement.style.textAlign = this.style.node.textAlign;
+                nodeElement.style.verticalAlign = this.style.node.verticalAlign;
+                nodeElement.style.lineHeight = `${this.style.node.height} px`;
+                nodeElement.style.position = "absolute";
+                // 检查并调整节点的位置设置，确保节点在画布的范围内，并且不被其他节点遮挡，使节点可见
+                // 将一些重复的代码封装成函数
+                let position = this.calculateNodePosition(nodeElement, parent);
+                nodeElement.style.left = `${position.x} px`;
+                nodeElement.style.top = `${position.y} px`;
+                return nodeElement;
+            }
+
+            createLine(from, to) { // 创建线
+                // 使用更有意义的变量名
+                let lineElement = document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "line"
+                );
+
+
+                lineElement.setAttribute("stroke-width", this.style.line.width);
+                lineElement.setAttribute("stroke", this.style.line.color);
+                // 将一些重复的代码封装成函数
+                let position = this.calculateLinePosition(from, to);
+                lineElement.setAttribute("x1", position.x1);
+                lineElement.setAttribute("y1", position.y1);
+                lineElement.setAttribute("x2", position.x2);
+                lineElement.setAttribute("y2", position.y2);
+                return lineElement;
+            }
+
+            renderNode(node, parent) {
+                parent.appendChild(node);
+            }
+
+            renderLine(line, container) { // 渲染线
+                container.appendChild(line);
+            }
+
+
+
+            renderTree(tree, container) { // 渲染树
+                let node = this.createNode(tree.text, container);
+                this.nodes.push(node);
+                this.renderNode(node, container);
+                if (tree.children && tree.children.length > 0) {
+                    for (let child of tree.children) {
+                        let line = this.createLine(node, child);
+                        this.lines.push(line);
+                        this.renderLine(line, container);
+                        this.renderTree(child, container);
+                    }
+
+                }
+
+            }
+
+            render() {
+                this.renderTree(this.root, this.container);
+            }
+
+            updateLinePosition(line, nodes) { // 更新线的位置
+                // 使用更有意义的变量名
+                let from = nodes[0];
+                let to = nodes[1];
+                // 将一些重复的代码封装成函数
+                let position = this.calculateLinePosition(from, to);
+                line.setAttribute("x1", position.x1);
+                line.setAttribute("y1", position.y1);
+                line.setAttribute("x2", position.x2);
+                line.setAttribute("y2", position.y2);
+            }
+            //
+            updateAllLinesPosition() { // 更新所有线的位置
+                for (let i = 0; i < this.lines.length; i++) {
+                    let line = this.lines[i];
+                    let nodes = [this.nodes[i], this.nodes[i + 1]];
+                    this.updateLinePosition(line, nodes);
+                }
+            }
+
+
+            dragStart(event) { // 拖拽开始的事件
+                // 使用模板字符串代替字符串拼接
+                console.log(`drag start: ${event.target.innerText} `);
+                this.draggingNode = event.target;
+                this.startX = event.clientX;
+                this.startY = event.clientY;
+            }
+
+            dragMove(event) { // 拖拽中的事件
+                if (this.draggingNode) {
+                    console.log(`drag move: ${event.target.innerText} `);
+                    let offsetX = event.clientX - this.startX;
+                    let offsetY = event.clientY - this.startY;
+                    let originX = parseInt(this.draggingNode.style.left);
+                    let originY = parseInt(this.draggingNode.style.top);
+                    // 检查并调整节点的位置设置，确保节点在画布的范围内，并且不被其他节点遮挡，使节点可见
+                    // 添加一些边界检查，防止节点超出画布
+                    let newX = Math.max(0, Math.min(originX + offsetX, this.container.offsetWidth - this.style.node
+                        .width));
+                    let newY = Math.max(0, Math.min(originY + offsetY, this.container.offsetHeight - this.style.node
+                        .height));
+                    this.draggingNode.style.left = `${newX} px`;
+                    this.draggingNode.style.top = `${newY} px`;
+                    this.updateAllLinesPosition();
+                }
+            }
+
+            dragEnd(event) { // 拖拽结束的事件
+                if (this.draggingNode) {
+                    console.log(`drag end: ${event.target.innerText} `);
+                    this.draggingNode = null;
+                }
+            }
+
+            addEventListeners() { // 添加事件的函数
+                for (let node of this.nodes) {
+                    // 使用箭头函数代替普通函数，避免this指向问题
+                    node.addEventListener("mousedown", (event) => {
+                        this.dragStart(event);
+                    });
+                    node.addEventListener("mousemove", (event) => {
+                        this.dragMove(event);
+                    });
+                    node.addEventListener("mouseup", (event) => {
+                        this.dragEnd(event);
+                    });
+                }
+            }
+
+            init() { // 初始化的函数
+                this.render();
+                this.addEventListeners();
+            }
+
+
+
+            // 计算节点的位置的函数
+            calculateNodePosition(nodeElement, parentElement) {
+                // 添加一些注释，解释一些复杂的逻辑或算法
+                // 获取节点的索引
+                let index = this.nodes.indexOf(nodeElement);
+                // 获取节点的层级
+                let level = Math.floor(Math.log2(index + 1));
+                // 获取节点在同一层级的兄弟节点的数量
+                let siblings = Math.pow(2, level);
+                // 获取节点在同一层级的兄弟节点中的序号
+                let order = index - siblings + 1;
+                // 计算节点的水平间距
+                let gapX = this.container.offsetWidth / (siblings + 1);
+                // 计算节点的垂直间距
+                let gapY = this.container.offsetHeight / (level + 2);
+                // 计算节点的水平坐标
+                let x = gapX * (order + 1) - this.style.node.width / 2;
+                // 计算节点的垂直坐标
+                let y = gapY * (level + 1) - this.style.node.height / 2;
+                return {
+                    x,
+                    y
+                };
+            }
+
+            // 计算连接线的位置的函数
+            calculateLinePosition(fromElement, toElement) {
+                // 添加一些注释，解释一些复杂的逻辑或算法
+                // 获取连接线起点和终点的中心坐标
+                let x1 = parseInt(fromElement.style.left) + this.style.node.width / 2;
+                let y1 = parseInt(fromElement.style.top) + this.style.node.height / 2;
+                let x2 = parseInt(toElement.style.left) + this.style.node.width / 2;
+                let y2 = parseInt(toElement.style.top) + this.style.node.height / 2;
+                return {
+                    x1,
+                    y1,
+                    x2,
+                    y2
+                };
+            }
+        }
+
+
+
+        // 创建几个思维导图节点
+
+        let root = {
+            text: "思维导图",
+            children: [{
+                    text: "定义",
+                    children: [{
+                            text: "一种图形化的表示方式",
+                        },
+                        {
+                            text: "用于组织和展示信息",
+                        },
+                    ],
+                },
+                {
+                    text: "特点",
+                    children: [{
+                            text: "以中心主题为核心",
+                        },
+                        {
+                            text: "分支结构为主要形式",
+                        },
+                        {
+                            text: "利用图像、颜色、符号等元素",
+                        },
+                    ],
+                },
+                {
+                    text: "作用",
+                    children: [{
+                            text: "激发创意思维",
+                        },
+                        {
+                            text: "提高记忆效率",
+                        },
+                        {
+                            text: "简化复杂问题",
+                        },
+                    ],
+                },
+            ],
+        };
+    </script>
+    <script>
+        // 获取画布元素
+        let container = document.getElementById("container");
+        // 创建一个思维导图对象
+        let mindMap = new MindMap({
+            container: container,
+            root: root,
+            style: {
+                node: {
+                    width: 100,
+                    height: 50,
+                    borderRadius: 10,
+                    backgroundColor: "lightblue",
+                    color: "black",
+                    fontSize: 16,
+                    textAlign: "center",
+                    verticalAlign: "middle",
+                },
+                line: {
+                    width: 2,
+                    color: "gray",
+                },
+            },
+        });
+    </script>
 </body>
+
 </html>
