@@ -1,4 +1,24 @@
+// //创建一个思维导图节点类
+// class Node {
+//     constructor() {
+//         //根据已有的id号，生成一个新的id号
+//         this.id = Date.now();
+//         //添加属性 ：标题，文本，父节点，子节点，连接，其他数据
+//         this.title = "";
+//         this.text = "";
+//         this.parent = null;
+//         this.children = [];
+//         this.connections = [];
+//         this.other = {};
+//         // 添加属性层级
+//         this.level = null;
+//     }
+// }
 
+
+
+// 导入d3
+// import * as d3 from "d3";
 
 // 创建一个节点类，属性包含id，title，text，parent，children，connections，other
 
@@ -25,6 +45,7 @@ class MindMap {
 
     // 添加一个节点到思维导图中，指定父节点和连接节点
     addNode(node, parent, connections = []) {
+        // alert("添加节点");
         node.parent = parent; // 设置节点的父节点
         parent.children.push(node); // 将节点添加到父节点的子节点数组中
         node.connections = connections; // 设置节点的连接节点数组
@@ -98,20 +119,44 @@ class MindMap {
             .attr("class", "node") // 设置类名为node
             .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y}, 0)`); // 将g元素旋转和平移到对应的位置
 
+        // 在每个g元素中添加一个rect元素，用于表示节点的形状
         node.append("rect") // 在每个g元素中添加一个rect元素，用于表示节点的形状
             .attr("width", d => d.width) // 设置方框的宽度为数据元素的width属性
             .attr("height", d => d.height) // 设置方框的高度为数据元素的height属性
             .attr("x", d => -d.width / 2) // 设置方框的水平位置为居中对齐
             .attr("y", d => -d.height / 2) // 设置方框的垂直位置为居中对齐
-            .attr("fill", "white") // 设置方框的填充颜色为白色
-            .attr("stroke", "black"); // 设置方框的描边颜色为黑色
+            .attr("fill", "white") // 设置节点的颜色为白色
+            // 设置方框的描边颜色为黑色
+            .attr("stroke", "black")
+            // 设置方框的描边宽度为1
+            .attr("stroke-width", 1);
+
+
+
+        // node.append("rect") // 在每个g元素中添加一个rect元素，用于表示节点的形状
+        //     .attr("width", d => d.width) // 设置方框的宽度为数据元素的width属性
+        //     .attr("height", d => d.height) // 设置方框的高度为数据元素的height属性
+        //     .attr("x", d => -d.width / 2) // 设置方框的水平位置为居中对齐
+        //     .attr("y", d => -d.height / 2) // 设置方框的垂直位置为居中对齐
+        //     .attr("fill", "white") // 设置方框的填充颜色为白色
+        //     .attr("stroke", "black"); // 设置方框的描边颜色为黑色
+
+
         node.append("text") // 在每个g元素中添加一个text元素，用于表示节点的标题
             .attr("class", "node-text") // 设置类名为node-text
             .attr("dy", "0.31em") // 设置垂直偏移量为0.31em
             .attr("x", d => d.x < Math.PI === !d.children ? d.width / 2 + 4 : -d.width / 2 - 4) // 设置水平位置为根据节点的角度和是否有子节点决定，并留出一定间距
-            .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end") // 设置文本对齐方式为根据节点的角度和是否有子节点决定
-            .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null) // 设置旋转角度为根据节点的角度决定
-            .text(d => d.title); // 设置文本内容为数据元素的title属性
+            .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end") // 设置水平位置为根据节点的角度和是否有子节点决定，并留出一定间距
+            .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y}, 0)`) // 将g元素旋转和平移到对应的位置
+            .text(d => d.data.name); // 设置文字内容为数据元素的name属性
+
+        // node.append("text") // 在每个g元素中添加一个text元素，用于表示节点的标题
+        //     .attr("class", "node-text") // 设置类名为node-text
+        //     .attr("dy", "0.31em") // 设置垂直偏移量为0.31em
+        //     .attr("x", d => d.x < Math.PI === !d.children ? d.width / 2 + 4 : -d.width / 2 - 4) // 设置水平位置为根据节点的角度和是否有子节点决定，并留出一定间距
+        //     .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end") // 设置文本对齐方式为根据节点的角度和是否有子节点决定
+        //     .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null) // 设置旋转角度为根据节点的角度决定
+        //     .text(d => d.title); // 设置文本内容为数据元素的title属性
 
 
 
@@ -119,6 +164,7 @@ class MindMap {
 }
 
 // 获取svg元素，并设置宽度和高度
+
 let svg = d3.select("#mindmap")
     .attr("width", 800)
     .attr("height", 600);
