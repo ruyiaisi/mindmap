@@ -1,29 +1,5 @@
 
 
-// //创建一个思维导图画布并在html中显示出来，背景颜色为灰色，实线边框为灰色
-// var svg = d3.select("body").append("svg").attr("width", "100%").attr("height", "100%");
-
-// // 创建一个思维导图画布用g
-// var g = svg.append("g").attr("width", "100%").attr("height", "100%");
-
-// // 创建一个方法，将nodes中的节点在画布中画出
-// function draw(nodes) {
-//     // 先清空画布
-//     g.selectAll("*").remove();
-//     // 循环遍历nodes数组中的节点，将它们添加到画布中
-//     nodes.forEach(function (node) {
-//         // 创建一个新的节点
-//         var node = new Node();
-//         // 将节点添加到画布中
-//         g.append("g").attr("transform", "translate(" + node.x + "," + node.y + ")");
-
-//     })
-
-// }
-// draw(nodes);
-
-
-
 // 创建一个节点类，属性包含id，title，text，parent，children，connections，other
 
 class Node {
