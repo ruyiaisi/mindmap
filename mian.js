@@ -1,87 +1,3 @@
-// //创建一个思维导图节点类
-// class Node {
-//     constructor() {
-//         //根据已有的id号，生成一个新的id号
-//         this.id = Date.now();
-//         //添加属性 ：标题，文本，父节点，子节点，连接，其他数据
-//         this.title = "";
-//         this.text = "";
-//         this.parent = null;
-//         this.children = [];
-//         this.connections = [];
-//         this.other = {};
-//         // 添加属性层级
-//         this.level = null;
-//     }
-// }
-
-
-
-
-
-
-
-
-// var nodes = [];
-// // 生成一个根节点，层级为0
-// var root = new Node();
-// root.level = 0;
-// // 将根节点添加到节点数组中去
-// nodes.push(root);
-
-
-// //生成测试用的节点
-// var node1 = new Node();
-// var node2 = new Node();
-// var node3 = new Node();
-// var node4 = new Node();
-// var node5 = new Node();
-// var node6 = new Node();
-// var node7 = new Node();
-// var node8 = new Node();
-// var node9 = new Node();
-// // 节点建立层级关系
-// node1.level = 1;
-// node2.level = 1;
-// node3.level = 1;
-// node4.level = 2;
-// node5.level = 2;
-// node6.level = 2;
-// node7.level = 2;
-// node8.level = 2;
-// node9.level = 2;
-// // 将节点添加到节点数组中去
-// nodes.push(node1);
-// nodes.push(node2);
-// nodes.push(node3);
-// nodes.push(node4);
-// nodes.push(node5);
-// nodes.push(node6);
-// nodes.push(node7);
-// nodes.push(node8);
-// nodes.push(node9);
-// // 节点之间 建立父子节点关系
-// node1.parent = root;
-// node2.parent = root;
-// node3.parent = root;
-
-// node4.parent = node1;
-// node5.parent = node1;
-// node6.parent = node2;
-// node7.parent = node2;
-// node8.parent = node3;
-// node9.parent = node3;
-// root.children.push(node1);
-// root.children.push(node2);
-// root.children.push(node3);
-// node1.children.push(node4);
-// node1.children.push(node5);
-// node2.children.push(node6);
-// node2.children.push(node7);
-// node3.children.push(node8);
-// node3.children.push(node9);
-// node2.connections.push(node8);
-// node8.connections.push(node2);
 
 
 // //创建一个思维导图画布并在html中显示出来，背景颜色为灰色，实线边框为灰色
@@ -109,6 +25,7 @@
 
 
 // 创建一个节点类，属性包含id，title，text，parent，children，connections，other
+
 class Node {
     constructor(id, title, text, parent = null, children = [], connections = [], other = {}) {
         this.id = id; // 节点的唯一标识符
@@ -118,9 +35,10 @@ class Node {
         this.children = children; // 节点的子节点数组
         this.connections = connections; // 节点的连接节点数组
         this.other = other; // 节点的其他属性对象
+        this.width = 40; // 方框的宽度
+        this.height = 20; // 方框的高度
     }
 }
-
 // 创建一个思维导图类，属性包含root，nodes，links
 class MindMap {
     constructor(root) {
@@ -204,18 +122,23 @@ class MindMap {
             .attr("class", "node") // 设置类名为node
             .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y}, 0)`); // 将g元素旋转和平移到对应的位置
 
-        node.append("circle") // 在每个g元素中添加一个circle元素，用于表示节点的形状
-            .attr("r", 10) // 设置圆的半径为10
-            .attr("fill", "white") // 设置圆的填充颜色为白色
-            .attr("stroke", "black"); // 设置圆的描边颜色为黑色
-
+        node.append("rect") // 在每个g元素中添加一个rect元素，用于表示节点的形状
+            .attr("width", d => d.width) // 设置方框的宽度为数据元素的width属性
+            .attr("height", d => d.height) // 设置方框的高度为数据元素的height属性
+            .attr("x", d => -d.width / 2) // 设置方框的水平位置为居中对齐
+            .attr("y", d => -d.height / 2) // 设置方框的垂直位置为居中对齐
+            .attr("fill", "white") // 设置方框的填充颜色为白色
+            .attr("stroke", "black"); // 设置方框的描边颜色为黑色
         node.append("text") // 在每个g元素中添加一个text元素，用于表示节点的标题
             .attr("class", "node-text") // 设置类名为node-text
             .attr("dy", "0.31em") // 设置垂直偏移量为0.31em
-            .attr("x", d => d.x < Math.PI === !d.children ? 12 : -12) // 设置水平位置为根据节点的角度和是否有子节点决定
+            .attr("x", d => d.x < Math.PI === !d.children ? d.width / 2 + 4 : -d.width / 2 - 4) // 设置水平位置为根据节点的角度和是否有子节点决定，并留出一定间距
             .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end") // 设置文本对齐方式为根据节点的角度和是否有子节点决定
             .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null) // 设置旋转角度为根据节点的角度决定
-            .text(d => d.data.title); // 设置文本内容为数据元素的title属性
+            .text(d => d.title); // 设置文本内容为数据元素的title属性
+
+
+
     }
 }
 
